@@ -3,10 +3,9 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** ✅ Phase 1 (synthetic baseline) and Phase 2 (realistic-format
-> pipeline) complete. Phase 3 (real data + harder-task retraining) is next,
-> pending access to real survey cutouts — see **Data Access Note** below.
-> Part of the SpaceAI portfolio alongside
+> **Status:** ✅ Phases 1-3 complete. Phase 4 (real data) is next, pending
+> the local download step -- see **Data Access Note** below. Part of the
+> SpaceAI portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
 
@@ -14,21 +13,29 @@ wide-field galaxy survey imaging.
 
 The real Bologna Strong Gravitational Lens Finding Challenge data
 (Metcalf et al. 2019) lives on the Bologna Lens Factory's own server and is
-several GB per band — see `scripts/download_bologna_challenge.py` for exact
+several GB per band -- see `scripts/download_bologna_challenge.py` for exact
 steps to fetch it locally. `src/preprocessing.py` is already built to ingest
 it (FITS + catalog → the same array format the pipeline notebooks use), so
-Phase 3 is a data swap, not a rewrite.
+Phase 4 is a data swap, not a rewrite.
 
 ## Results
 
 | Phase | Data | Precision | Recall | F1 |
 |-------|------|-----------|--------|-----|
-| **Baseline (Phase 1)** | Synthetic, 64×64, bold arcs, 1:50 imbalance | 1.000 | 0.750 | 0.857 |
+| Phase 1 baseline | Synthetic, 64×64, bold arcs, 1:50 | 1.000 | 0.750 | 0.857 |
+| Phase 3a — naive retrain | Synthetic v2, 101×101, PSF+masked, fainter arcs, 1:50, same arch as Phase 1 | 0.029 | 0.750 | 0.057 |
+| **Phase 3b — augmented + BN/GAP** | Same v2 data, 1:20, augmented positives, BatchNorm+GAP arch | 0.084 | 0.867 | 0.154 |
 
-Phase 2 didn't retrain — it upgraded the data format (101×101, PSF blur,
-masked artifacts, fainter arcs) and built the preprocessing pipeline against
-it. Phase 3 will retrain on this harder synthetic format before moving to
-real data, so a fair Phase 1 → Phase 3 comparison exists.
+**The honest story:** Phase 1's strong numbers came from an easy synthetic
+task (bold, high-contrast arcs), not a strong model. Phase 2's realism
+upgrades (PSF blur, masking, fainter arcs matching the real challenge spec)
+collapsed F1 to 0.057 with no other changes. Phase 3's fixes — positive-class
+augmentation and a BatchNorm/GAP architecture better suited to rare, subtle
+signals — recovered close to 3× the F1 (0.057 → 0.154) but land nowhere near
+Phase 1, which is the expected and correct outcome for a genuinely hard
+rare-event problem. Precision remains the weak point throughout (model
+overpredicts positives); threshold-based F1 is also noisy at ~15 test
+positives, so Phase 4 switches primary evaluation to ROC-AUC.
 
 ## Notebooks
 
@@ -36,6 +43,7 @@ real data, so a fair Phase 1 → Phase 3 comparison exists.
 |----------|--------------|
 | [`notebooks/Phase1_baseline.ipynb`](notebooks/Phase1_baseline.ipynb) | SIS-lensing data simulation, sanity-check visualization, baseline CNN training + evaluation |
 | [`notebooks/Phase2_data_pipeline.ipynb`](notebooks/Phase2_data_pipeline.ipynb) | Realistic-format simulator v2 (101×101, PSF, masking), preprocessing pipeline, real-data on-ramp |
+| [`notebooks/Phase3_imbalance_architecture.ipynb`](notebooks/Phase3_imbalance_architecture.ipynb) | Naive-retrain cost measurement, positive-class augmentation, BatchNorm/GAP architecture |
 
 ## Motivation
 
