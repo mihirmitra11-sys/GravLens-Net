@@ -3,28 +3,39 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** ✅ Phase 1 complete — synthetic SIS-lensing simulation +
-> baseline CNN trained and evaluated. Phase 2 (real dataset pipeline) is
-> next. Part of the SpaceAI portfolio alongside
+> **Status:** ✅ Phase 1 (synthetic baseline) and Phase 2 (realistic-format
+> pipeline) complete. Phase 3 (real data + harder-task retraining) is next,
+> pending access to real survey cutouts — see **Data Access Note** below.
+> Part of the SpaceAI portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
+
+## Data Access Note
+
+The real Bologna Strong Gravitational Lens Finding Challenge data
+(Metcalf et al. 2019) lives on the Bologna Lens Factory's own server and is
+several GB per band — see `scripts/download_bologna_challenge.py` for exact
+steps to fetch it locally. `src/preprocessing.py` is already built to ingest
+it (FITS + catalog → the same array format the pipeline notebooks use), so
+Phase 3 is a data swap, not a rewrite.
 
 ## Results
 
 | Phase | Data | Precision | Recall | F1 |
 |-------|------|-----------|--------|-----|
-| **Baseline (Phase 1)** | Synthetic, SIS lensing, 1:50 imbalance | 1.000 | 0.750 | 0.857 |
+| **Baseline (Phase 1)** | Synthetic, 64×64, bold arcs, 1:50 imbalance | 1.000 | 0.750 | 0.857 |
 
-Test set positives: 8 (small — treat this as a first signal, not a solid
-estimate; see notebook discussion for caveats). Negatives use three confuser
-types (isolated galaxy, merger/pair, spiral) rather than blank noise, so the
-task isn't trivially separable.
+Phase 2 didn't retrain — it upgraded the data format (101×101, PSF blur,
+masked artifacts, fainter arcs) and built the preprocessing pipeline against
+it. Phase 3 will retrain on this harder synthetic format before moving to
+real data, so a fair Phase 1 → Phase 3 comparison exists.
 
 ## Notebooks
 
 | Notebook | Description |
 |----------|--------------|
 | [`notebooks/Phase1_baseline.ipynb`](notebooks/Phase1_baseline.ipynb) | SIS-lensing data simulation, sanity-check visualization, baseline CNN training + evaluation |
+| [`notebooks/Phase2_data_pipeline.ipynb`](notebooks/Phase2_data_pipeline.ipynb) | Realistic-format simulator v2 (101×101, PSF, masking), preprocessing pipeline, real-data on-ramp |
 
 ## Motivation
 
@@ -95,7 +106,8 @@ pip install numpy pandas matplotlib tensorflow scikit-learn scipy astropy
 ```
 GravLens-Net/
 ├── notebooks/     # Phase-by-phase Jupyter notebooks
-├── src/           # Reusable modules (e.g. data_generation.py)
+├── src/           # Reusable modules (data_generation, simulate_v2, preprocessing)
+├── scripts/       # Standalone scripts (e.g. real-data download helper)
 ├── data/          # Dataset download/prep scripts (raw data not tracked)
 ├── models/        # Saved model checkpoints
 ├── results/       # Metrics, plots, evaluation outputs
