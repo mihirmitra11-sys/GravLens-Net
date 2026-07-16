@@ -3,10 +3,28 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** 🚧 Planning phase — repo initialized, dataset acquisition
-> and baseline model are next. Part of the SpaceAI portfolio alongside
+> **Status:** ✅ Phase 1 complete — synthetic SIS-lensing simulation +
+> baseline CNN trained and evaluated. Phase 2 (real dataset pipeline) is
+> next. Part of the SpaceAI portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
+
+## Results
+
+| Phase | Data | Precision | Recall | F1 |
+|-------|------|-----------|--------|-----|
+| **Baseline (Phase 1)** | Synthetic, SIS lensing, 1:50 imbalance | 1.000 | 0.750 | 0.857 |
+
+Test set positives: 8 (small — treat this as a first signal, not a solid
+estimate; see notebook discussion for caveats). Negatives use three confuser
+types (isolated galaxy, merger/pair, spiral) rather than blank noise, so the
+task isn't trivially separable.
+
+## Notebooks
+
+| Notebook | Description |
+|----------|--------------|
+| [`notebooks/Phase1_baseline.ipynb`](notebooks/Phase1_baseline.ipynb) | SIS-lensing data simulation, sanity-check visualization, baseline CNN training + evaluation |
 
 ## Motivation
 
@@ -77,6 +95,7 @@ pip install numpy pandas matplotlib tensorflow scikit-learn scipy astropy
 ```
 GravLens-Net/
 ├── notebooks/     # Phase-by-phase Jupyter notebooks
+├── src/           # Reusable modules (e.g. data_generation.py)
 ├── data/          # Dataset download/prep scripts (raw data not tracked)
 ├── models/        # Saved model checkpoints
 ├── results/       # Metrics, plots, evaluation outputs
