@@ -3,20 +3,27 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** ✅ Phases 1-3 complete. Phase 4 (real data) is next, pending
-> the local download step -- see **Data Access Note** below. Part of the
-> SpaceAI portfolio alongside
+> **Status:** 🚧 Phase 4 in progress — the original Bologna Challenge
+> download links are dead (confirmed), so real data is being sourced instead
+> from live public services (VizieR real lens catalogs + DESI Legacy Survey
+> cutouts), run from Google Colab since this repo's dev sandbox can't reach
+> either service. See **Data Access Note** below. Part of the SpaceAI
+> portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
 
 ## Data Access Note
 
-The real Bologna Strong Gravitational Lens Finding Challenge data
-(Metcalf et al. 2019) lives on the Bologna Lens Factory's own server and is
-several GB per band -- see `scripts/download_bologna_challenge.py` for exact
-steps to fetch it locally. `src/preprocessing.py` is already built to ingest
-it (FITS + catalog → the same array format the pipeline notebooks use), so
-Phase 4 is a data swap, not a rewrite.
+The original Bologna Strong Gravitational Lens Finding Challenge download
+links (`metcalf1.difa.unibo.it`) are dead as of this writing — confirmed
+directly, not just a sandbox access issue. Phase 4 instead uses:
+- **VizieR** (`astroquery`) for real confirmed-lens coordinates (e.g. SLACS)
+- **DESI Legacy Imaging Surveys cutout service** for real observed sky
+  cutouts at those coordinates (free, no registration)
+
+See [`scripts/phase4_real_data_colab.py`](scripts/phase4_real_data_colab.py)
+— written for Google Colab, since neither service is reachable from this
+repo's own dev environment either.
 
 ## Results
 
