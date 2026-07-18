@@ -35,8 +35,8 @@ for i, t in enumerate(result):
 # 2. Auto-detect RA/Dec columns -- check every table, use the first one
 #    that actually has recognizable coordinate columns
 # ---------------------------------------------------------------------
-RA_CANDIDATES = ["RAJ2000", "RA_ICRS", "RAdeg", "_RAJ2000", "RA"]
-DEC_CANDIDATES = ["DEJ2000", "DE_ICRS", "DEdeg", "_DEJ2000", "DECJ2000", "DEC", "DE"]
+RA_CANDIDATES = ["_RA", "RAJ2000", "RA_ICRS", "RAdeg", "_RAJ2000", "RA"]
+DEC_CANDIDATES = ["_DE", "DEJ2000", "DE_ICRS", "DEdeg", "_DEJ2000", "DECJ2000", "DEC", "DE"]
 
 def find_col(candidates, colnames):
     for c in candidates:
