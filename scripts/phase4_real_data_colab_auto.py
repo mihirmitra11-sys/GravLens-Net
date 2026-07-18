@@ -19,50 +19,47 @@ from astroquery.vizier import Vizier
 import time
 
 # ---------------------------------------------------------------------
-# 1. Auto-find a real confirmed strong-lens catalog on VizieR
+# 1. Real confirmed strong-lens catalog on VizieR
 # ---------------------------------------------------------------------
-print("Searching VizieR for a real lens catalog...")
-catalog_list = Vizier.find_catalogs("SLACS gravitational lens")
-if not catalog_list:
-    catalog_list = Vizier.find_catalogs("strong gravitational lens catalog")
-
-catalog_keys = list(catalog_list.keys())
-print(f"Found {len(catalog_keys)} candidate catalogs, using the first: {catalog_keys[0]}")
-for k in catalog_keys[:5]:
-    print(" -", k, ":", catalog_list[k].description[:80])
-
-CATALOG_KEY = catalog_keys[0]
+# Confirmed real: J/ApJ/682/964 -- Sloan Lens ACS Survey V (Bolton et al. 2008)
+CATALOG_KEY = "J/ApJ/682/964"
 
 Vizier.ROW_LIMIT = -1
-result = Vizier.get_catalogs(CATALOG_KEY)
-table = result[0]
-print("Columns available:", table.colnames)
+result = Vizier.get_catalogs([CATALOG_KEY])  # must be a list, not a bare string
+
+print(f"This catalog has {len(result)} table(s):")
+for i, t in enumerate(result):
+    print(f"  table[{i}] ({len(t)} rows): {t.colnames}")
 
 # ---------------------------------------------------------------------
-# 2. Auto-detect RA/Dec columns from common naming conventions
+# 2. Auto-detect RA/Dec columns -- check every table, use the first one
+#    that actually has recognizable coordinate columns
 # ---------------------------------------------------------------------
 RA_CANDIDATES = ["RAJ2000", "RA_ICRS", "RAdeg", "_RAJ2000", "RA"]
-DEC_CANDIDATES = ["DEJ2000", "DE_ICRS", "DEdeg", "_DEJ2000", "DEC", "DE"]
+DEC_CANDIDATES = ["DEJ2000", "DE_ICRS", "DEdeg", "_DEJ2000", "DECJ2000", "DEC", "DE"]
 
 def find_col(candidates, colnames):
     for c in candidates:
         if c in colnames:
             return c
-    # fall back: first column containing "RA" or "DE"
-    for c in colnames:
-        if any(cand.rstrip("J2000deg_ICRS").upper() in c.upper() for cand in candidates):
-            return c
     return None
 
-RA_COL = find_col(RA_CANDIDATES, table.colnames)
-DEC_COL = find_col(DEC_CANDIDATES, table.colnames)
-print(f"Using RA column: {RA_COL}, Dec column: {DEC_COL}")
+table = None
+RA_COL = DEC_COL = None
+for t in result:
+    ra_c = find_col(RA_CANDIDATES, t.colnames)
+    de_c = find_col(DEC_CANDIDATES, t.colnames)
+    if ra_c and de_c:
+        table, RA_COL, DEC_COL = t, ra_c, de_c
+        break
 
-if RA_COL is None or DEC_COL is None:
+if table is None:
     raise ValueError(
-        f"Could not auto-detect RA/Dec columns. Available columns: {table.colnames}. "
-        "Paste this list back and we'll fix the detection."
+        "Could not find RA/Dec columns in any table of this catalog. "
+        "Paste the table[i] colnames printed above back and we'll fix the detection."
     )
+
+print(f"Using RA column: {RA_COL}, Dec column: {DEC_COL} ({len(table)} rows)")
 
 lens_ra = np.array(table[RA_COL], dtype=float)
 lens_dec = np.array(table[DEC_COL], dtype=float)
