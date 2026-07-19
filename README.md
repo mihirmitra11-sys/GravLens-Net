@@ -3,11 +3,10 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** 🚧 Phase 5 in progress — building a properly matched negative
-> sample (massive ellipticals without confirmed lensing) to answer what
-> Phase 4 actually couldn't. See
-> [`scripts/phase5_matched_negatives_colab.py`](scripts/phase5_matched_negatives_colab.py).
-> Part of the SpaceAI portfolio alongside
+> **Status:** ✅ Phase 5 complete — matched negative sample (real LRGs, no
+> confirmed lensing) fixes Phase 4's galaxy-type confound, but surfaces a
+> second, subtler one. Read **Results** below. Part of the SpaceAI
+> portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
 
@@ -34,29 +33,38 @@ to reproduce.
 | Phase 1 baseline | Synthetic, 64×64, bold arcs, 1:50 | 1.000 | 0.750 | 0.857 | — |
 | Phase 3a — naive retrain | Synthetic v2, 101×101, PSF+masked, fainter arcs, 1:50 | 0.029 | 0.750 | 0.057 | — |
 | Phase 3b — augmented + BN/GAP | Synthetic v2, 1:20, augmented | 0.084 | 0.867 | 0.154 | — |
-| **Phase 4a — real data (all)** | 131 real SLACS lenses + 1310 real random-sky negatives | 0.857 | 0.900 | 0.878 | **0.989** |
-| **Phase 4b — real data (non-blank negatives)** | Same, 1310 → 398 negatives (blank sky removed) | 0.850 | 0.850 | 0.850 | **0.958** |
+| Phase 4a — real data (random negatives) | 131 real SLACS lenses + 1310 real random-sky negatives | 0.857 | 0.900 | 0.878 | 0.989 |
+| Phase 4b — real data (non-blank negatives) | Same, blank sky removed (→398 negatives) | 0.850 | 0.850 | 0.850 | 0.958 |
+| **Phase 5 — real data (matched negatives)** | 131 real SLACS lenses + 422 real LRG-type negatives, SLACS positions excluded | 0.762 | 0.842 | 0.800 | **0.956** |
 
-**⚠️ Important caveat on the Phase 4 numbers — read before citing these:**
-these AUCs are real, but very likely do **not** mean "the model detects
-gravitational lenses." SLACS positives are all massive elliptical galaxies
-(that's how SLACS selects lens candidates), while the negatives — even after
-removing blank sky — are an unmatched random sample of real galaxies of
-every type. A concentration check (central flux / wide-annulus flux) found
-positives at 9.88 vs. non-blank negatives at 1.10 — the model is most likely
-separating "massive elliptical" from "everything else," not detecting arcs.
-This is a known, well-documented failure mode in real lens-finding work,
-which is why the actual Bologna Challenge and papers like Petrillo et al.
-(2017) use negative samples matched in galaxy type to the positives. Ironically,
-Phase 1-3's synthetic confuser negatives (all built from the same Sersic
-profile family as the lens galaxy) were methodologically closer to correct
-than this real-data setup. Full analysis in
-[`notebooks/Phase4_real_data.ipynb`](notebooks/Phase4_real_data.ipynb).
+**⚠️ Read this before citing any Phase 4/5 AUC as a lens-detection number:**
 
-**Phase 5 (open):** build a properly matched negative sample — massive
-elliptical galaxies without confirmed lensing, ideally drawn from the same
-SDSS spectroscopic selection SLACS used — to get a real answer to the
-question Phase 4 didn't actually answer.
+Phase 4's 0.989 AUC was mostly a galaxy-type confound — SLACS positives are
+all massive ellipticals, negatives were random sky/random galaxies. A
+concentration check (positives 9.88 vs. negatives 1.10) confirmed this
+directly.
+
+**Phase 5 fixes that specific confound** — matched negatives are real
+LRG-type galaxies, and concentration alone now carries almost no signal
+(AUC 0.32, down from ~1.0). That's genuine, demonstrated progress.
+
+**But a second, subtler confound remains:** total flux alone still gets AUC
+0.79 — the matched LRG catalog wasn't selected to match SLACS's specific
+redshift/velocity-dispersion cuts, only the broad "massive elliptical"
+category, so negatives skew brighter/larger (likely a redshift-distribution
+mismatch). The model's 0.956 AUC clearly uses more than this one shortcut,
+but the exact split between "genuine arc detection" and "residual
+size/brightness signal" can't be cleanly separated with this dataset.
+
+Full diagnostic detail in
+[`notebooks/Phase5_matched_negatives.ipynb`](notebooks/Phase5_matched_negatives.ipynb).
+
+**Phase 6 (open):** the real fix is a negative sample drawn from SLACS's
+actual spectroscopic *parent sample* (the full candidate set SLACS searched
+for lensing in, before confirming which had visible arcs) rather than a
+general LRG catalog — that would match redshift and velocity dispersion
+exactly, not just broad galaxy type. Constructing that query is a harder,
+more specific catalog search than what Phase 5 attempted.
 
 ## Notebooks
 
@@ -66,6 +74,7 @@ question Phase 4 didn't actually answer.
 | [`notebooks/Phase2_data_pipeline.ipynb`](notebooks/Phase2_data_pipeline.ipynb) | Realistic-format simulator v2 (101×101, PSF, masking), preprocessing pipeline, real-data on-ramp |
 | [`notebooks/Phase3_imbalance_architecture.ipynb`](notebooks/Phase3_imbalance_architecture.ipynb) | Naive-retrain cost measurement, positive-class augmentation, BatchNorm/GAP architecture |
 | [`notebooks/Phase4_real_data.ipynb`](notebooks/Phase4_real_data.ipynb) | Real SLACS + Legacy Survey data, training, and the galaxy-type confound analysis |
+| [`notebooks/Phase5_matched_negatives.ipynb`](notebooks/Phase5_matched_negatives.ipynb) | Matched LRG negative sample, confound re-check, and the residual size/flux confound |
 
 ## Motivation
 
