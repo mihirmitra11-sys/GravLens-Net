@@ -29,7 +29,7 @@ import time
 # 1. Real SLACS lens positions again (to exclude them from negatives)
 # ---------------------------------------------------------------------
 SLACS_KEY = "J/ApJ/682/964"
-Vizier.ROW_LIMIT = -1
+Vizier.ROW_LIMIT = 200000  # cap, not unlimited -- some LRG catalogs have millions of rows
 slacs_result = Vizier.get_catalogs([SLACS_KEY])
 
 RA_CANDIDATES = ["_RA", "RAJ2000", "RA_ICRS", "RAdeg", "_RAJ2000", "RA"]
@@ -57,48 +57,60 @@ print(f"Loaded {len(slacs_ra)} SLACS positions to exclude from negatives")
 # ---------------------------------------------------------------------
 # 2. Find a massive elliptical / LRG spectroscopic catalog on VizieR
 # ---------------------------------------------------------------------
-# We search rather than hardcode, same principle as Phase 4 -- inspect the
-# printed list. If the auto-picked one turns out wrong, tell me what
-# printed here and we'll adjust CATALOG_KEY.
+# We search rather than hardcode, same principle as Phase 4. Full SDSS
+# "photometric catalog" hits (billions of rows) return nothing useful
+# without extra constraints, so we specifically try curated LRG-selection
+# catalogs first, and validate each candidate actually returns usable rows
+# with RA/Dec before committing to it -- rather than blindly taking the
+# first search hit.
 print("\nSearching VizieR for a massive elliptical / LRG catalog...")
-search_terms = ["SDSS luminous red galaxies", "SDSS LRG spectroscopic", "BOSS LOWZ galaxies"]
-catalog_list = {}
-for term in search_terms:
-    found = Vizier.find_catalogs(term)
-    if found:
-        catalog_list = found
-        print(f"  matched on search term: '{term}'")
-        break
-
-catalog_keys = list(catalog_list.keys())
-print(f"Found {len(catalog_keys)} candidates:")
-for k in catalog_keys[:8]:
-    print(" -", k, ":", catalog_list[k].description[:90])
-
-CATALOG_KEY = catalog_keys[0]
-print(f"\nUsing: {CATALOG_KEY}")
-
-result = Vizier.get_catalogs([CATALOG_KEY])
-print(f"This catalog has {len(result)} table(s):")
-for i, t in enumerate(result):
-    print(f"  table[{i}] ({len(t)} rows): {t.colnames}")
+search_terms = [
+    "Eisenstein 2001 luminous red galaxies",
+    "SDSS LRG target selection",
+    "SDSS luminous red galaxy spectroscopic",
+    "BOSS LOWZ galaxies",
+    "SDSS luminous red galaxies",
+]
 
 table = None
 RA_COL = DEC_COL = None
-for t in result:
-    ra_c = find_col(RA_CANDIDATES, t.colnames)
-    de_c = find_col(DEC_CANDIDATES, t.colnames)
-    if ra_c and de_c:
-        table, RA_COL, DEC_COL = t, ra_c, de_c
+CATALOG_KEY = None
+
+for term in search_terms:
+    found = Vizier.find_catalogs(term)
+    if not found:
+        continue
+    print(f"\nSearch term '{term}' found {len(found)} candidate(s):")
+    for k in list(found.keys())[:8]:
+        print(" -", k, ":", found[k].description[:90])
+
+    for k in found.keys():
+        try:
+            result = Vizier.get_catalogs([k])
+        except Exception as e:
+            print(f"   [{k}] failed to fetch: {e}")
+            continue
+        for t in result:
+            if len(t) < 100:  # skip empty/trivial tables
+                continue
+            ra_c = find_col(RA_CANDIDATES, t.colnames)
+            de_c = find_col(DEC_CANDIDATES, t.colnames)
+            if ra_c and de_c:
+                table, RA_COL, DEC_COL, CATALOG_KEY = t, ra_c, de_c, k
+                break
+        if table is not None:
+            break
+    if table is not None:
         break
 
 if table is None:
     raise ValueError(
-        "Could not find RA/Dec columns in any table of this catalog. "
-        "Paste the table[i] colnames printed above back and we'll fix it."
+        "Could not find a usable LRG/elliptical catalog with RA/Dec across "
+        "any search term. Paste everything printed above back and we'll "
+        "pick a specific catalog key by hand instead of searching."
     )
 
-print(f"Using RA column: {RA_COL}, Dec column: {DEC_COL} ({len(table)} rows)")
+print(f"\nUsing catalog: {CATALOG_KEY}, RA column: {RA_COL}, Dec column: {DEC_COL} ({len(table)} rows)")
 cand_ra = np.array(table[RA_COL], dtype=float)
 cand_dec = np.array(table[DEC_COL], dtype=float)
 
