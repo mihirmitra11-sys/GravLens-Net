@@ -82,7 +82,8 @@ for term in search_terms:
         continue
     print(f"\nSearch term '{term}' found {len(found)} candidate(s):")
     for k in list(found.keys())[:8]:
-        print(" -", k, ":", found[k].description[:90])
+        desc = found[k].description or "(no description)"
+        print(" -", k, ":", desc[:90])
 
     for k in found.keys():
         try:
