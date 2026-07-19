@@ -3,10 +3,11 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** ✅ Phase 4 complete — real data (SLACS confirmed lenses + real
-> DESI Legacy Survey cutouts) trained end-to-end. Read the **important
-> caveat** in Results below before treating the AUC as a lens-detection
-> number. Part of the SpaceAI portfolio alongside
+> **Status:** 🚧 Phase 5 in progress — building a properly matched negative
+> sample (massive ellipticals without confirmed lensing) to answer what
+> Phase 4 actually couldn't. See
+> [`scripts/phase5_matched_negatives_colab.py`](scripts/phase5_matched_negatives_colab.py).
+> Part of the SpaceAI portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
 
