@@ -3,10 +3,11 @@
 Deep learning pipeline for detecting strong gravitational lenses in
 wide-field galaxy survey imaging.
 
-> **Status:** ✅ Phase 5 complete — matched negative sample (real LRGs, no
-> confirmed lensing) fixes Phase 4's galaxy-type confound, but surfaces a
-> second, subtler one. Read **Results** below. Part of the SpaceAI
-> portfolio alongside
+> **Status:** 🚧 Phase 6 in progress — redshift-matching negatives to
+> SLACS's actual lens redshifts to close the residual size/flux confound
+> Phase 5 found. See
+> [`scripts/phase6_zmatched_negatives_colab.py`](scripts/phase6_zmatched_negatives_colab.py).
+> Part of the SpaceAI portfolio alongside
 > [LunarCrater-Net](https://github.com/mihirmitra11-sys/LunarCrater-Net)
 > and [ExoTransit-Net](https://github.com/mihirmitra11-sys/ExoTransit-Net).
 
